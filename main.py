@@ -1,6 +1,8 @@
 import requests
 import unittest
 import uuid
+import random
+import json
 
 base_url = "https://todo.pixegami.io/"
 
@@ -58,6 +60,21 @@ def update_task(data):
         return response.status_code
 
 
+def list_tasks(user_id):
+    response = requests.get(base_url + "list-tasks/" + user_id)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print("Error in GET request @ %s" % base_url)
+        print(response.json())
+        return response.status_code
+
+
+def write_list_tasks_json():
+    with open("list_tasks_response.json", "w") as f:
+        json.dump(list_tasks("grmm"), f, indent=4)
+
+
 def test_create_get_task():
     create_task_response = create_task(create_data)
     # Get task_id from the response
@@ -66,7 +83,7 @@ def test_create_get_task():
     assert get_task_response['is_done'] == create_data['is_done']
     assert get_task_response['content'] == create_data['content']
     assert get_task_response['user_id'] == create_data['user_id']
-    print("Create task and get task test passed")
+    print("[1] Create task and get task test passed")
 
 
 def test_update_get_task():
@@ -81,17 +98,33 @@ def test_update_get_task():
     assert get_task_response['is_done'] == update_data['is_done']
     assert get_task_response['content'] == update_data['content']
     assert get_task_response['user_id'] == update_data['user_id']
-    print("Update task and get task test passed")
+    print("[2] Update task and get task test passed")
 
 
-# def test_list_three_tasks():
-#     for i in range(3):
-#         random_task_id = str(uuid.uuid4())
-#     response = default_get()
-#     assert len(response) == 3
-#     print("List three tasks test passed")
+def test_list_three_tasks():
+    # Generate a random user_id
+    user_id = str(uuid.uuid4())
+    # Keep track of ids of the created tasks
+    task_ids = []
+    for i in range(3):
+        random_data = {
+            "content": ''.join(random.choices("abcde", k=10)),
+            "user_id": user_id,
+            "task_id": "42",
+            "is_done": False
+        }
+        create_task_response = create_task(random_data)
+        task_ids.append(create_task_response["task"]["task_id"])
+
+    list_tasks_response = list_tasks(user_id)
+    # Check length of the list of tasks
+    assert len(list_tasks_response["tasks"]) == 3
+    # Check if the task_ids of the created tasks are in the response
+    for task in list_tasks_response["tasks"]:
+        assert task["task_id"] in task_ids
+    print("[3] List three tasks test passed")
+
 
 test_create_get_task()
 test_update_get_task()
-
-# print(uuid.uuid4())
+test_list_three_tasks()
