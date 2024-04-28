@@ -50,6 +50,11 @@ def get_task(task_id):
         return response.status_code
 
 
+def get_task_supressed(task_id):
+    response = requests.get(base_url + "get-task/" + task_id)
+    return response.status_code
+
+
 def update_task(data):
     response = requests.put(base_url + "update-task", json=data)
     if response.status_code == 200:
@@ -73,6 +78,16 @@ def list_tasks(user_id):
 def write_list_tasks_json():
     with open("list_tasks_response.json", "w") as f:
         json.dump(list_tasks("grmm"), f, indent=4)
+
+
+def delete_task(task_id):
+    response = requests.delete(base_url + "delete-task/" + task_id)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print("Error in DELETE request @ %s" % base_url)
+        print(response.json())
+        return response.status_code
 
 
 def test_create_get_task():
@@ -125,6 +140,20 @@ def test_list_three_tasks():
     print("[3] List three tasks test passed")
 
 
-test_create_get_task()
-test_update_get_task()
-test_list_three_tasks()
+def test_delete_task():
+    create_task_response = create_task(create_data)
+    # Get task_id from the response
+    task_id = create_task_response["task"]["task_id"]
+    delete_task_response = delete_task(task_id)
+    assert delete_task_response["deleted_task_id"] == task_id
+    # Test if the task is actually deleted
+    get_task_response = get_task_supressed(task_id)
+    assert get_task_response == 404
+    print("[4] Delete task test passed")
+
+
+if __name__ == "__main__":
+    test_create_get_task()
+    test_update_get_task()
+    test_list_three_tasks()
+    test_delete_task()
