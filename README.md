@@ -1,4 +1,4 @@
-# lab8tsc2024
+# lab8_tsc2024
 
 # Team:
 - Andreea-Cristina BUDULAN (123531)
